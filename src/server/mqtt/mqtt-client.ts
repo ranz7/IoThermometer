@@ -10,7 +10,7 @@ export class MQTTClientManager {
     private static instance: MQTTClientManager;
     private client: MqttClient | null = null;
     private connectionPromise: Promise<MqttClient> | null = null;
-    private subscribers: Set<(topic: string, message: Buffer) => void> = new Set();
+    private subscribers = new Set<(topic: string, message: Buffer) => void>();
 
     private constructor() {
         // Prywatny konstruktor zapobiega tworzeniu nowych instancji
@@ -67,8 +67,12 @@ export class MQTTClientManager {
             });
 
             // Obsługa procesu zamykania aplikacji
-            process.on('SIGTERM', () => this.cleanup(client));
-            process.on('SIGINT', () => this.cleanup(client));
+            process.on('SIGTERM', () => {
+                void this.cleanup(client);
+            });
+            process.on('SIGINT', () => {
+                void this.cleanup(client);
+            });
         });
 
         return this.connectionPromise;

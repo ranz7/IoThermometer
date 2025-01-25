@@ -1,9 +1,15 @@
 import { DeviceDetails } from './device-details';
 
-export default function DeviceDetailsPage({ 
+type Params = Promise<{
+  id: string;
+}>;
+
+export default async function Page({ 
   params 
 }: { 
-  params: { id: string } 
+  params: Params 
 }) {
-  return <DeviceDetails id={params.id} />;
+  const resolvedParams = await params;
+  
+  return <DeviceDetails id={resolvedParams.id} />;
 }

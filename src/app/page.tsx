@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "~/server/auth";
-import { api, HydrateClient } from "~/trpc/server";
+import { HydrateClient } from "~/trpc/server";
 import Dashboard from "~/components/dashboard";  // Załóżmy, że tu znajduje się Twój komponent Dashboard
 
 export default async function Home() {

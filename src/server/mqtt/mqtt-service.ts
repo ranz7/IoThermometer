@@ -1,4 +1,3 @@
-// src/server/mqtt/mqtt-service.ts
 import { MQTTClientManager } from './mqtt-client';
 import { db } from "~/server/db";
 import { devices, temperatures, deviceUsers, users } from "~/server/db/schema";
@@ -13,6 +12,9 @@ interface InitialConfiguration {
 interface TemperatureData {
     value: number;
 }
+
+// We'll add a type for possible MQTT message payloads
+type MQTTPayload = InitialConfiguration | TemperatureData;
 
 export class MQTTService {
     private static instance: MQTTService;
@@ -31,10 +33,11 @@ export class MQTTService {
     }
 
     private async initialize() {
-        // Dodajemy obsługę wiadomości
-        this.mqttManager.addMessageSubscriber(this.handleMessage.bind(this));
+        // We wrap the async handler in a sync function to satisfy TypeScript
+        this.mqttManager.addMessageSubscriber((topic, message) => {
+            void this.handleMessage(topic, message);
+        });
 
-        // Subskrybujemy wymagane topici
         await this.mqttManager.subscribe('initial_configuration');
         await this.mqttManager.subscribe('users/+/devices/+/temperature');
 
@@ -43,12 +46,22 @@ export class MQTTService {
 
     private async handleMessage(topic: string, message: Buffer) {
         try {
-            const payload = JSON.parse(message.toString());
+            // We add type checking for the parsed JSON
+            const payload = JSON.parse(message.toString()) as MQTTPayload;
 
-            if (topic === 'initial_configuration') {
-                await this.handleInitialConfiguration(payload as InitialConfiguration);
-            } else if (topic.includes('/temperature')) {
-                await this.handleTemperatureReading(topic, payload as TemperatureData);
+            // Type guard functions to ensure type safety
+            const isInitialConfig = (p: MQTTPayload): p is InitialConfiguration => 
+                'userEmail' in p && 'macAddress' in p && 'secretCode' in p;
+
+            const isTemperatureData = (p: MQTTPayload): p is TemperatureData =>
+                'value' in p && typeof p.value === 'number';
+
+            if (topic === 'initial_configuration' && isInitialConfig(payload)) {
+                await this.handleInitialConfiguration(payload);
+            } else if (topic.includes('/temperature') && isTemperatureData(payload)) {
+                await this.handleTemperatureReading(topic, payload);
+            } else {
+                console.error('Invalid message format for topic:', topic);
             }
         } catch (error) {
             console.error('Error handling MQTT message:', error);
