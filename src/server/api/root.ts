@@ -1,6 +1,10 @@
 import { postRouter } from "~/server/api/routers/post";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
-import { iotRouter } from "./routers/iot";
+import { deviceRouter } from "~/server/api/routers/device";
+import { MQTTService } from "~/server/mqtt/mqtt-service";
+
+// Inicjalizacja serwisu MQTT
+MQTTService.getInstance();
 
 /**
  * This is the primary router for your server.
@@ -9,7 +13,7 @@ import { iotRouter } from "./routers/iot";
  */
 export const appRouter = createTRPCRouter({
   post: postRouter,
-  iot: iotRouter,
+  device: deviceRouter,
 });
 
 // export type definition of API
