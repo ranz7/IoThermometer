@@ -169,4 +169,14 @@ export const iotRouter = createTRPCRouter({
         })
         .returning();
     }),
+
+    testData: publicProcedure.query(async ({ ctx }) => {
+        const allDevices = await ctx.db.select().from(devices);
+        const allTemps = await ctx.db.select().from(temperatures);
+        
+        return {
+          devices: allDevices,
+          temperatures: allTemps
+        };
+      }),
 });
