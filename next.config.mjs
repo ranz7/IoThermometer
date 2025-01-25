@@ -1,9 +1,4 @@
 /** @type {import('next').NextConfig} */
-const config = {
-    // ...inne konfiguracje
-    experimental: {
-      instrumentationHook: true
-    }
-  };
+const config = {};
   
   export default config;
