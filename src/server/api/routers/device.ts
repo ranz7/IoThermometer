@@ -5,6 +5,7 @@ import { MQTTService } from "~/server/mqtt/mqtt-service";
 import { 
   devices,
   temperatures,
+  users,
 } from "~/server/db/schema";
 
 // Schemat walidacji dla aktualizacji konfiguracji
@@ -104,6 +105,8 @@ export const deviceRouter = createTRPCRouter({
         throw new Error("Unauthorized access to device");
       }
 
+      
+
       // Przygotowujemy obiekt z aktualizacjami
       const updates: Partial<typeof devices.$inferSelect> = {
         updatedAt: new Date(),
@@ -122,6 +125,14 @@ export const deviceRouter = createTRPCRouter({
         .set(updates)
         .where(eq(devices.id, input.deviceId));
 
+      const user = await ctx.db.query.users.findFirst({
+        where: (u) => eq(u.id, hasAccess.userId),
+      });
+      
+      if (!user) {
+        throw new Error("User not found after update");
+      }
+      
       // Pobieramy zaktualizowane urządzenie
       const updatedDevice = await ctx.db.query.devices.findFirst({
         where: (d) => eq(d.id, input.deviceId),
@@ -132,7 +143,7 @@ export const deviceRouter = createTRPCRouter({
       }
 
       // Wysyłamy nową konfigurację przez MQTT
-      await MQTTService.getInstance().updateDeviceConfig(updatedDevice);
+      await MQTTService.getInstance().updateDeviceConfig(updatedDevice, user);
 
       return updatedDevice;
     }),

@@ -145,8 +145,8 @@ export class MQTTService {
         }
     }
 
-    public async updateDeviceConfig(device: typeof devices.$inferSelect) {
-        const configTopic = `users/${device.id}/devices/${device.macAddress}/config`;
+    public async updateDeviceConfig(device: typeof devices.$inferSelect, user: typeof users.$inferSelect) {
+        const configTopic = `users/${user.email}/devices/${device.macAddress}/config`;
         const configMessage = {
             contrast: device.contrast,
             orientation: device.orientation ? 1 : 0,
