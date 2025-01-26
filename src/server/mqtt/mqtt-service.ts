@@ -19,10 +19,14 @@ type MQTTPayload = InitialConfiguration | TemperatureData;
 export class MQTTService {
     private static instance: MQTTService;
     private mqttManager: MQTTClientManager;
+    private isInitialized = false;
 
     private constructor() {
         this.mqttManager = MQTTClientManager.getInstance();
-        this.initialize().catch(console.error);
+        if (!this.isInitialized) {
+            this.initialize().catch(console.error);
+            this.isInitialized = true;
+        }
     }
 
     public static getInstance(): MQTTService {

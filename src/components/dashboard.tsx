@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { api, RouterOutputs } from "~/trpc/react";
 
-const POLLING_INTERVAL = 30000; // 30 sekund
+const POLLING_INTERVAL = 1000;
 
 export default function Dashboard() {
   const router = useRouter();
@@ -62,10 +62,13 @@ function DeviceCard({
   });
 
   // Formatujemy dane do wykresu
-  const chartData = temperatures?.map((temp) => ({
-    time: new Date(temp.timestamp).toLocaleTimeString(),
+  const chartData = temperatures
+  ?.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+  .map((temp) => ({
+    time: new Date(temp.timestamp).toLocaleString(),
     value: parseFloat(temp.value),
-  })) ?? [];
+  }))
+  ?? [];
 
   // Sprawdzamy, czy temperatura jest poza progami
   const lastTemp = parseFloat(device.lastTemperature?.value ?? "0");

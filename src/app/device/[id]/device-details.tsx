@@ -37,7 +37,7 @@ export function DeviceDetails({ id }: { id: string }) {
     from: startDate,
     to: endDate,
   }, {
-    refetchInterval: 30000, // 30 sekund
+    refetchInterval: 1000,
   });
 
   // Mutacja do aktualizacji konfiguracji
@@ -52,10 +52,13 @@ export function DeviceDetails({ id }: { id: string }) {
   }
 
   // Formatujemy dane do wykresu
-  const chartData = temperatures?.map((temp) => ({
+  const chartData = temperatures
+  ?.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+  .map((temp) => ({
     time: new Date(temp.timestamp).toLocaleString(),
     value: parseFloat(temp.value),
-  })) ?? [];
+  }))
+  ?? [];
 
   return (
     <div className="container mx-auto p-4">
