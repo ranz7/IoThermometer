@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { Switch } from "~/components/ui/switch";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { api } from "~/trpc/react";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Calendar } from "~/components/ui/calendar";
@@ -27,6 +27,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -170,11 +171,72 @@ function DeviceUsersList({ deviceId }: { deviceId: string }) {
   );
 }
 
+function SecretCodeDialog({
+  code,
+  isOpen,
+  onClose,
+}: {
+  code: string | null;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  
+  const copyToClipboard = async () => {
+    if (code) {
+      await navigator.clipboard.writeText(code);
+      toast({
+        title: "Skopiowano do schowka",
+        description: "Kod sekretny został skopiowany",
+      });
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={() => onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Nowy kod sekretny</DialogTitle>
+          <DialogDescription>
+            Zapisz ten kod w bezpiecznym miejscu. Po zamknięciu tego okna nie będzie możliwości jego ponownego wyświetlenia.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2 bg-muted p-3 rounded-lg">
+            <code className="flex-1 break-all text-sm">{code}</code>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={copyToClipboard}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-lg">
+            <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+              ⚠️ Ten kod jest wymagany do rekonfiguracji urządzenia. Upewnij się, że go zapisałeś przed zamknięciem tego okna.
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button 
+            onClick={() => onClose()}
+            className="w-full sm:w-auto"
+          >
+            Rozumiem, zapisałem kod
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function DeviceDetails({ id }: { id: string }) {
   const router = useRouter();
   const { toast } = useToast();
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
+  const [newSecretCode, setNewSecretCode] = useState<string | null>(null);
 
   const utils = api.useContext();
 
@@ -200,10 +262,7 @@ export function DeviceDetails({ id }: { id: string }) {
 
   const regenerateSecret = api.device.regenerateSecretCode.useMutation({
     onSuccess: (data) => {
-      toast({
-        title: "Kod sekretny został zregenerowany",
-        description: `Nowy kod: ${data.secretCode}`,
-      });
+      setNewSecretCode(data.secretCode);
     },
   });
   
@@ -219,7 +278,7 @@ export function DeviceDetails({ id }: { id: string }) {
   
   const handleRegenerateSecretCode = () => {
     regenerateSecret.mutate({ deviceId: id });
-  };
+  };  
   
   const handleClearHistory = () => {
     clearHistory.mutate({ deviceId: id });
@@ -468,6 +527,12 @@ export function DeviceDetails({ id }: { id: string }) {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+
+                <SecretCodeDialog 
+                  code={newSecretCode}
+                  isOpen={newSecretCode !== null}
+                  onClose={() => setNewSecretCode(null)}
+                />
 
                 {/* Czyszczenie historii */}
                 <AlertDialog>
