@@ -26,7 +26,7 @@ export function Header() {
           {session && (
             <nav className="flex gap-4">
               <Link 
-                href="/dashboard"
+                href="/"
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
               >
                 Panel urządzeń
